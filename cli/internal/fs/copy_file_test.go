@@ -18,13 +18,11 @@ func TestCopyOrLinkFile(t *testing.T) {
 	dst := fs.NewDir(t, "copy-or-link-dist")
 	srcFilePath := filepath.Join(src.Path(), "foo")
 	dstFilePath := filepath.Join(dst.Path(), "foo")
-	srcFile, err := os.Create(srcFilePath)
+	_, err := os.Create(srcFilePath)
 	assert.NilError(t, err, "Create")
-	stat, err := srcFile.Stat()
-	assert.NilError(t, err, "Stat")
 	shouldLink := true
 	shouldFallback := false
-	err = CopyOrLinkFile(srcFilePath, dstFilePath, stat.Mode(), stat.Mode(), shouldLink, shouldFallback)
+	err = CopyOrLinkFile(srcFilePath, dstFilePath, shouldLink, shouldFallback)
 	assert.NilError(t, err, "CopyOrLinkFile")
 	sameFile, err := SameFile(srcFilePath, dstFilePath)
 	assert.NilError(t, err, "SameFile")
@@ -41,9 +39,56 @@ func TestCopyOrLinkFile(t *testing.T) {
 	dstLinkPath := filepath.Join(dst.Path(), "foo-ptr")
 	err = os.Symlink("foo", srcLinkPath)
 	assert.NilError(t, err, "SymLink")
-	stat, err = os.Lstat(srcLinkPath)
 	assert.NilError(t, err, "Lstat")
-	err = CopyOrLinkFile(srcLinkPath, dstLinkPath, stat.Mode(), stat.Mode(), shouldLink, shouldFallback)
+	err = CopyOrLinkFile(srcLinkPath, dstLinkPath, shouldLink, shouldFallback)
+	if err != nil {
+		t.Fatalf("CopyOrLinkFile %v", err)
+	}
+	linkDst, err := os.Readlink(dstLinkPath)
+	assert.NilError(t, err, "Readlink")
+	if linkDst != "foo" {
+		t.Errorf("Readlink(dstLinkPath) got %v, want foo", linkDst)
+	}
+}
+
+func TestCopyOrLinkFileWithPerms(t *testing.T) {
+	// Directory layout:
+	//
+	// <src>/
+	//   foo
+	executableMode := os.FileMode(493)
+	src := fs.NewDir(t, "copy-or-link")
+	dst := fs.NewDir(t, "copy-or-link-dist")
+	srcFilePath := filepath.Join(src.Path(), "foo")
+	dstFilePath := filepath.Join(dst.Path(), "foo")
+	srcFile, err := os.Create(srcFilePath)
+	assert.NilError(t, err, "Create")
+	err = srcFile.Chmod(executableMode)
+	assert.NilError(t, err, "Chmod")
+	shouldLink := true
+	shouldFallback := false
+	err = CopyOrLinkFile(srcFilePath, dstFilePath, shouldLink, shouldFallback)
+	assert.NilError(t, err, "CopyOrLinkFile")
+	sameFile, err := SameFile(srcFilePath, dstFilePath)
+	assert.NilError(t, err, "SameFile")
+	if !sameFile {
+		t.Errorf("SameFile(%v, %v) got false, want true", srcFilePath, dstFilePath)
+	}
+	info, err := os.Lstat(dstFilePath)
+	assert.NilError(t, err, "Lstat")
+	assert.Equal(t, info.Mode(), executableMode, "expected dest to have matching permissions")
+
+	// Directory layout:
+	//
+	// <src>/
+	//   foo
+	//   foo-ptr -> foo
+	srcLinkPath := filepath.Join(src.Path(), "foo-ptr")
+	dstLinkPath := filepath.Join(dst.Path(), "foo-ptr")
+	err = os.Symlink("foo", srcLinkPath)
+	assert.NilError(t, err, "SymLink")
+	assert.NilError(t, err, "Lstat")
+	err = CopyOrLinkFile(srcLinkPath, dstLinkPath, shouldLink, shouldFallback)
 	if err != nil {
 		t.Fatalf("CopyOrLinkFile %v", err)
 	}
@@ -90,8 +135,7 @@ func TestRecursiveCopyOrLinkFile(t *testing.T) {
 
 	shouldLink := true
 	shouldFallback := false
-	mode := os.ModeDir // TODO(gsoltis): this mode argument seems out of place
-	err = RecursiveCopyOrLinkFile(src.Path(), dst.Path(), mode, shouldLink, shouldFallback)
+	err = RecursiveCopyOrLinkFile(src.Path(), dst.Path(), shouldLink, shouldFallback)
 	assert.NilError(t, err, "RecursiveCopyOrLinkFile")
 
 	dstAPath := filepath.Join(dst.Path(), "child", "a")

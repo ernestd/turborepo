@@ -228,7 +228,7 @@ func (r *RunState) Close(Ui cli.Ui, filename string) error {
 		name = filename
 	}
 	if outputPath != "" {
-		if err := fs.CopyFile(outputPath, name, fs.DirPermissions); err != nil {
+		if err := fs.CopyFile(outputPath, name); err != nil {
 			return err
 		}
 	}

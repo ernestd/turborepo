@@ -200,38 +200,38 @@ func (p *prune) prune(opts *opts) error {
 	p.logger.Trace("new workspaces", "value", workspaces)
 	if opts.docker {
 		if fs.FileExists(".gitignore") {
-			if err := fs.CopyFile(".gitignore", outDir.Join("full", ".gitignore").ToStringDuringMigration(), fs.DirPermissions); err != nil {
+			if err := fs.CopyFile(".gitignore", outDir.Join("full", ".gitignore").ToStringDuringMigration()); err != nil {
 				return errors.Wrap(err, "failed to copy root .gitignore")
 			}
 		}
 		// We only need to actually copy turbo.json into "full" folder since it isn't needed for installation in docker
 		if fs.FileExists("turbo.json") {
-			if err := fs.CopyFile("turbo.json", outDir.Join("full", "turbo.json").ToStringDuringMigration(), fs.DirPermissions); err != nil {
+			if err := fs.CopyFile("turbo.json", outDir.Join("full", "turbo.json").ToStringDuringMigration()); err != nil {
 				return errors.Wrap(err, "failed to copy root turbo.json")
 			}
 		}
 
-		if err := fs.CopyFile("package.json", outDir.Join("full", "package.json").ToStringDuringMigration(), fs.DirPermissions); err != nil {
+		if err := fs.CopyFile("package.json", outDir.Join("full", "package.json").ToStringDuringMigration()); err != nil {
 			return errors.Wrap(err, "failed to copy root package.json")
 		}
 
-		if err := fs.CopyFile("package.json", outDir.Join("json", "package.json").ToStringDuringMigration(), fs.DirPermissions); err != nil {
+		if err := fs.CopyFile("package.json", outDir.Join("json", "package.json").ToStringDuringMigration()); err != nil {
 			return errors.Wrap(err, "failed to copy root package.json")
 		}
 	} else {
 		if fs.FileExists(".gitignore") {
-			if err := fs.CopyFile(".gitignore", outDir.Join(".gitignore").ToStringDuringMigration(), fs.DirPermissions); err != nil {
+			if err := fs.CopyFile(".gitignore", outDir.Join(".gitignore").ToStringDuringMigration()); err != nil {
 				return errors.Wrap(err, "failed to copy root .gitignore")
 			}
 		}
 
 		if fs.FileExists("turbo.json") {
-			if err := fs.CopyFile("turbo.json", outDir.Join("turbo.json").ToStringDuringMigration(), fs.DirPermissions); err != nil {
+			if err := fs.CopyFile("turbo.json", outDir.Join("turbo.json").ToStringDuringMigration()); err != nil {
 				return errors.Wrap(err, "failed to copy root turbo.json")
 			}
 		}
 
-		if err := fs.CopyFile("package.json", outDir.Join("package.json").ToStringDuringMigration(), fs.DirPermissions); err != nil {
+		if err := fs.CopyFile("package.json", outDir.Join("package.json").ToStringDuringMigration()); err != nil {
 			return errors.Wrap(err, "failed to copy root package.json")
 		}
 	}
